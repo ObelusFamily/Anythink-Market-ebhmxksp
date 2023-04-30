@@ -1,9 +1,11 @@
-var mongoose = require("mongoose");
-var uniqueValidator = require("mongoose-unique-validator");
-var slug = require("slug");
-var User = mongoose.model("User");
+const mongoose = require("mongoose");
+const uniqueValidator = require("mongoose-unique-validator");
+const slug = require("slug");
+const User = mongoose.model("User");
+const openai = require("openai");
+openai.apiKey = process.env.OPENAI_API_KEY;
 
-var ItemSchema = new mongoose.Schema(
+const ItemSchema = new mongoose.Schema(
   {
     slug: { type: String, lowercase: true, unique: true },
     title: {type: String, required: [true, "can't be blank"]},
@@ -35,7 +37,7 @@ ItemSchema.methods.slugify = function() {
 };
 
 ItemSchema.methods.updateFavoriteCount = function() {
-  var item = this;
+  const item = this;
 
   return User.count({ favorites: { $in: [item._id] } }).then(function(count) {
     item.favoritesCount = count;
@@ -60,3 +62,25 @@ ItemSchema.methods.toJSONFor = function(user) {
 };
 
 mongoose.model("Item", ItemSchema);
+
+ItemSchema.pre("validate", async function (next) {
+  if (!this.slug) {
+    this.slugify();
+  }
+
+  // Generate an image using DALL-E if one is not provided
+  if (!this.image) {
+    try {
+      const response = await openai.Image.create({
+        prompt: this.title,
+        n: 1,
+        size: "256x256",
+      });
+      this.image = response.data[0].url;
+    } catch (error) {
+      console.error("Error generating image:", error);
+    }
+  }
+
+  next();
+});

@@ -1,5 +1,5 @@
 require("dotenv").config();
-var http = require("http"),
+const http = require("http"),
   path = require("path"),
   methods = require("methods"),
   express = require("express"),
@@ -10,10 +10,10 @@ var http = require("http"),
   errorhandler = require("errorhandler"),
   mongoose = require("mongoose");
 
-var isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === "production";
 
 // Create global app object
-var app = express();
+const app = express();
 
 app.use(cors());
 
@@ -84,6 +84,6 @@ app.use(function(err, req, res, next) {
 });
 
 // finally, let's start our server...
-var server = app.listen(process.env.PORT || 3000, function() {
+const server = app.listen(process.env.PORT || 3000, function() {
   console.log("Listening on port " + server.address().port);
 });
